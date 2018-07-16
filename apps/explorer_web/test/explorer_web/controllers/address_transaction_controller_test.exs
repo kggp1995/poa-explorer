@@ -128,6 +128,7 @@ defmodule ExplorerWeb.AddressTransactionControllerTest do
         :transaction
         |> insert(to_address: nil, created_contract_address_hash: address.hash)
         |> with_block(block)
+        |> Explorer.Repo.preload(:token_transfers)
 
       insert(
         :internal_transaction_create,
@@ -140,6 +141,34 @@ defmodule ExplorerWeb.AddressTransactionControllerTest do
       conn = get(conn, address_transaction_path(conn, :index, :en, address))
 
       assert [transaction] == conn.assigns.transactions
+    end
+
+    test "preload token transfers", %{conn: conn} do
+      alice = insert(:address)
+      bob = insert(:address)
+      contract_address = insert(:address, contract_code: data(:address_contract_code))
+      block = insert(:block)
+
+      insert(:token, contract_address: contract_address)
+
+      transaction =
+        :transaction
+        |> insert(to_address: contract_address, from_address: alice)
+        |> with_block(block)
+
+      token_transfer =
+        insert(
+          :token_transfer,
+          from_address: alice,
+          to_address: bob,
+          transaction: transaction,
+          token_contract_address: contract_address
+        )
+
+      conn = get(conn, address_transaction_path(conn, :index, :en, alice))
+
+      token_transfers = List.first(conn.assigns.transactions).token_transfers
+      assert token_transfers |> Enum.map(& &1.id) == [token_transfer.id]
     end
   end
 end
