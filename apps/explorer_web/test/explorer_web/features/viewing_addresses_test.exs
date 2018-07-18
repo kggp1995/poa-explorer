@@ -260,14 +260,28 @@ defmodule ExplorerWeb.ViewingAddressesTest do
     |> AddressPage.visit_page(address)
     |> assert_text(AddressPage.balance(), "0.0000000000000005 POA")
 
-    {:ok, [^hash]} =
-      Chain.update_balances([
-        %{
-          fetched_balance: 100,
-          fetched_balance_block_number: 1,
-          hash: hash
-        }
-      ])
+    {:ok, %{addresses: [^hash], balances: [%{address_hash: ^hash}]}} =
+      Chain.import_blocks(
+        addresses: [
+          params: [
+            %{
+              fetched_balance: 100,
+              fetched_balance_block_number: 1,
+              hash: hash
+            }
+          ],
+          with: :balance_changeset
+        ],
+        balances: [
+          params: [
+            %{
+              value: 100,
+              block_number: 1,
+              address_hash: hash
+            }
+          ]
+        ]
+      )
 
     {:ok, updated_address} = Chain.hash_to_address(hash)
 
