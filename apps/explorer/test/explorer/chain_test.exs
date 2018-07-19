@@ -260,18 +260,23 @@ defmodule Explorer.ChainTest do
   describe "balance/2" do
     test "with Address.t with :wei" do
       assert Chain.balance(%Address{fetched_balance: %Wei{value: Decimal.new(1)}}, :wei) == Decimal.new(1)
+
       assert Chain.balance(%Address{fetched_balance: nil}, :wei) == nil
     end
 
     test "with Address.t with :gwei" do
       assert Chain.balance(%Address{fetched_balance: %Wei{value: Decimal.new(1)}}, :gwei) == Decimal.new("1e-9")
+
       assert Chain.balance(%Address{fetched_balance: %Wei{value: Decimal.new("1e9")}}, :gwei) == Decimal.new(1)
+
       assert Chain.balance(%Address{fetched_balance: nil}, :gwei) == nil
     end
 
     test "with Address.t with :ether" do
       assert Chain.balance(%Address{fetched_balance: %Wei{value: Decimal.new(1)}}, :ether) == Decimal.new("1e-18")
+
       assert Chain.balance(%Address{fetched_balance: %Wei{value: Decimal.new("1e18")}}, :ether) == Decimal.new(1)
+
       assert Chain.balance(%Address{fetched_balance: nil}, :ether) == nil
     end
   end
@@ -354,18 +359,36 @@ defmodule Explorer.ChainTest do
 
   describe "fee/2" do
     test "without receipt with :wei unit" do
-      assert Chain.fee(%Transaction{gas: Decimal.new(3), gas_price: %Wei{value: Decimal.new(2)}, gas_used: nil}, :wei) ==
-               {:maximum, Decimal.new(6)}
+      assert Chain.fee(
+               %Transaction{
+                 gas: Decimal.new(3),
+                 gas_price: %Wei{value: Decimal.new(2)},
+                 gas_used: nil
+               },
+               :wei
+             ) == {:maximum, Decimal.new(6)}
     end
 
     test "without receipt with :gwei unit" do
-      assert Chain.fee(%Transaction{gas: Decimal.new(3), gas_price: %Wei{value: Decimal.new(2)}, gas_used: nil}, :gwei) ==
-               {:maximum, Decimal.new("6e-9")}
+      assert Chain.fee(
+               %Transaction{
+                 gas: Decimal.new(3),
+                 gas_price: %Wei{value: Decimal.new(2)},
+                 gas_used: nil
+               },
+               :gwei
+             ) == {:maximum, Decimal.new("6e-9")}
     end
 
     test "without receipt with :ether unit" do
-      assert Chain.fee(%Transaction{gas: Decimal.new(3), gas_price: %Wei{value: Decimal.new(2)}, gas_used: nil}, :ether) ==
-               {:maximum, Decimal.new("6e-18")}
+      assert Chain.fee(
+               %Transaction{
+                 gas: Decimal.new(3),
+                 gas_price: %Wei{value: Decimal.new(2)},
+                 gas_used: nil
+               },
+               :ether
+             ) == {:maximum, Decimal.new("6e-18")}
     end
 
     test "with receipt with :wei unit" do
@@ -838,6 +861,7 @@ defmodule Explorer.ChainTest do
         |> with_block()
 
       %InternalTransaction{id: first_id} = insert(:internal_transaction, transaction: transaction, index: 0)
+
       %InternalTransaction{id: second_id} = insert(:internal_transaction, transaction: transaction, index: 1)
 
       result =
@@ -935,11 +959,13 @@ defmodule Explorer.ChainTest do
 
     test "with Transaction.t with :gwei" do
       assert Chain.value(%Transaction{value: %Wei{value: Decimal.new(1)}}, :gwei) == Decimal.new("1e-9")
+
       assert Chain.value(%Transaction{value: %Wei{value: Decimal.new("1e9")}}, :gwei) == Decimal.new(1)
     end
 
     test "with Transaction.t with :ether" do
       assert Chain.value(%Transaction{value: %Wei{value: Decimal.new(1)}}, :ether) == Decimal.new("1e-18")
+
       assert Chain.value(%Transaction{value: %Wei{value: Decimal.new("1e18")}}, :ether) == Decimal.new(1)
     end
   end
@@ -1127,6 +1153,7 @@ defmodule Explorer.ChainTest do
       from_address = insert(:address, hash: from_address_hash)
 
       transaction_string_hash = "0x0705ea0a5b997d9aafd5c531e016d9aabe3297a28c0bd4ef005fe6ea329d301b"
+
       insert(:transaction, from_address: from_address, hash: transaction_string_hash)
 
       options = [

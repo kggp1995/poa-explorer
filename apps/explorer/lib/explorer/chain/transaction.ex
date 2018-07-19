@@ -322,7 +322,8 @@ defmodule Explorer.Chain.Transaction do
     end
   end
 
-  defp validate_collated_or_pending(%Changeset{} = changeset, field_validator) when is_function(field_validator, 2) do
+  defp validate_collated_or_pending(%Changeset{} = changeset, field_validator)
+       when is_function(field_validator, 2) do
     Enum.reduce(@collated_fields, changeset, field_validator)
   end
 
