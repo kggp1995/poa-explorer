@@ -19,8 +19,7 @@ defmodule Indexer.PendingTransactionFetcher do
 
   defstruct interval: @default_interval,
             json_rpc_named_arguments: [],
-            task_ref: nil,
-            task_pid: nil
+            task: nil
 
   @gen_server_options ~w(debug name spawn_opt timeout)a
 
@@ -65,11 +64,14 @@ defmodule Indexer.PendingTransactionFetcher do
 
   @impl GenServer
   def handle_info(:fetch, %PendingTransactionFetcher{} = state) do
-    {:ok, pid, ref} = Indexer.start_monitor(fn -> task(state) end)
-    {:noreply, %PendingTransactionFetcher{state | task_ref: ref, task_pid: pid}}
+    task = Task.Supervisor.async_nolink(Indexer.TaskSupervisor, fn -> task(state) end)
+    {:noreply, %PendingTransactionFetcher{state | task: task}}
   end
 
-  def handle_info({:DOWN, ref, :process, pid, reason}, %PendingTransactionFetcher{task_ref: ref, task_pid: pid} = state) do
+  def handle_info(
+        {:DOWN, ref, :process, pid, reason},
+        %PendingTransactionFetcher{task: %Task{pid: pid, ref: ref}} = state
+      ) do
     case reason do
       :normal ->
         :ok
@@ -79,7 +81,7 @@ defmodule Indexer.PendingTransactionFetcher do
     end
 
     new_state =
-      %PendingTransactionFetcher{state | task_ref: nil, task_pid: nil}
+      %PendingTransactionFetcher{state | task: nil}
       |> schedule_fetch()
 
     {:noreply, new_state}
